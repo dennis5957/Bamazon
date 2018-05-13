@@ -1,0 +1,7 @@
+.env
+.vscode/
+*.notes
+node_modules/
+*.junk
+*-test.js
+.jshintrc

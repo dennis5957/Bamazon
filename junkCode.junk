@@ -1,0 +1,68 @@
+/* jshint esversion:6 */
+
+const mysql = require('mysql');
+const inquirer = require("inquirer");
+
+const BamazonDb = function () {
+    let connection = mysql.createConnection({
+        host: 'localhost',
+        user: 'webUser',
+        password: 'webUser',
+        database: 'bamazon'
+    });
+
+    connection.connect();
+
+    this.getDepartments = function (aCallback) {
+        let departments = [];
+        connection.query('SELECT DISTINCT department_name FROM products', function (e, res, fields) {
+            if (e) aCallback(e, []);
+            res.forEach(function (department) {
+                departments.push(department.department_name);
+            });
+            aCallback(null, departments);
+        });
+    };
+
+
+    this.getProducts = function (aDepartment, aCallback) {
+        let products = [];
+        let sql = "SELECT * FROM products";
+        if (aDepartment != null && aDepartment != undefined) {
+            sql += " WHERE department_name = '" + aDepartment + "';";
+        }
+        connection.query(sql, function (e, res, fields) {
+            if (e) aCallback(e, []);
+            aCallback(null, res);
+        });
+    };
+
+
+    this.getProductsByDepartment = function (aCallback) {
+        let departments = [];
+        let me = this;
+        this.getDepartments(function (err, depts) {
+            for (let i = 0; i < depts.length; i++) {
+                const d = depts[i];    
+                me.getProducts(d, function(err, products) {
+                    var aaa = products;
+                    let bbb = products.map(function(item, index) {
+                        return {
+                            name: item.product_name,
+                            value: item.item_id
+                        };
+                    });
+                    departments.push({name: d, value: d});
+                    departments.push(...bbb);
+                    // let pMap = products.map(me.mapChoice());
+                    // departments.push(...pMap);
+                    aCallback(null, departments);
+                });
+            }    
+        });
+    };
+
+};
+
+
+module.exports = BamazonDb;
